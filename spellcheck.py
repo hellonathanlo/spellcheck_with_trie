@@ -65,6 +65,14 @@ class ProcessFiles(object):
         self.input_file = input_file
 
     def check_file_format(self):
+        """
+        The check_file_format function checks the formatting of the file by determining whether the file is ordered
+        as a single word per line. By dividing the number of lines by number of words, if a ratio of 1 is achieved,
+        then the script can be certain that the dictionary file has been formatted correctly. By determining the
+        formatting, incorrect usage can be error checked (i.e. calling this script as "spellcheck.py
+        DictionaryFile Inputfile" would result in an error message).
+        :return: the number of lines divided by the number of words
+        """
         file = open(self.input_file)
 
         number_of_lines = 0
