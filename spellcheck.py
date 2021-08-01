@@ -34,9 +34,6 @@ def command_line_help():
     arguments of 1 and 2 after calling this file.
     :return: command line help and instructions
     """
-    """
-    Identify dictionary file vs input file and return error when identified
-    """
 
     parser = argparse.ArgumentParser(prog='spellcheck',
                                      usage='python %(prog)s.py i d',
