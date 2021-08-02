@@ -14,6 +14,9 @@ Considerations:
 - Re: Wikipedia Damerau-Levenshtein Distance
     - Follow pseudocode and produce algorithm to calculate edit distances
         - Entries with 0 distance are same as those in the dictionary
+- Re: Trie
+    - Follow implementations of Trie
+        - Entries which can't be found in dictionary Trie spit out as incorrect numbers
 - inputFile
     - lowercase() and remove punctuation for comparison
 - dictionaryFile
@@ -63,12 +66,10 @@ class ProcessFiles(object):
 
     def check_file_format(self):
         """
-        The check_file_format function checks the formatting of the file by determining whether the file is ordered
-        as a single word per line. By dividing the number of lines by number of words, if a ratio of 1 is achieved,
-        then the script can be certain that the dictionary file has been formatted correctly. By determining the
-        formatting, incorrect usage can be error checked (i.e. calling this script as "spellcheck.py
-        DictionaryFile Inputfile" would result in an error message).
-        :return: the number of lines divided by the number of words
+        The check_file_format funciton accepts a file and reads each line of the file into a list.
+        If the ratio of lines to words is not 1, then it can be safely assumed that the user mixed the dictionary
+        and input files during the script call.
+        :return: ratio of lines to words
         """
         file = open(self.input_file)
 
@@ -81,7 +82,7 @@ class ProcessFiles(object):
             number_of_lines += 1
             number_of_words += len(words)
 
-        return number_of_lines/number_of_words
+        return number_of_lines / number_of_words
 
     def process_input(self):
         """
@@ -99,92 +100,110 @@ class ProcessFiles(object):
 
         word_list = [word.lower() for word in word_list]
 
-        sorted_input_dictionary = {}
+        word_set = set(word_list)
 
-        for word in word_list:
-            if word[0] not in sorted_input_dictionary.keys():
-                sorted_input_dictionary[word[0]] = set()
-                sorted_input_dictionary[word[0]].add(word)
+        return word_set
+
+
+class Node:
+    """
+    The Node class initializes each node of the Trie. By accepting a value, the node is initialized and
+    returns the value of the specified node when the Trie is traversed.
+    """
+    def __init__(self, value):
+        self.value = value
+        self.children = dict()
+        self.end = False
+
+    def __getitem__(self, key):
+        if key in self.children:
+            return self.children[key]
+
+        return None
+
+    def __setitem__(self, key, value):
+        self.children[key] = value
+
+    def __contains__(self, value):
+        return value in self.children
+
+    def __str__(self):
+        return str(self.value)
+
+
+class Trie:
+    """
+    The Trie class accepts each word of the processed files as an end node. By building each branch of the Trie
+    with partial completions of the word, the end node represents each word of the file.
+    """
+    def __init__(self):
+        self.root = Node('')
+
+    def add(self, word):
+        word = word.strip()
+        node = self.root
+        for letter in word:
+            next_letter = node[letter]
+            if next_letter is not None:
+                node = next_letter
             else:
-                if word not in sorted_input_dictionary[word[0]]:
-                    sorted_input_dictionary[word[0]].add(word)
+                node[letter] = Node(letter)
+                node = node[letter]
+        node.end = True
 
-        return sorted_input_dictionary
+    def __contains__(self, word):
+        node = self.root
+        for letter in word:
+            if letter not in node:
+                return False
+            node = node[letter]
+
+        if node.end:
+            return True
+        return False
 
 
 class SpellCheck(object):
     """
-    The SpellCheck class functions as a method to call the damerau_levenshtein_distance function iteratively then
-    return the results of the spell checking. This class accepts the input set and dictionary set from the
-    ProcessFiles class and calls them within the read_dictionary function.
-
+    The Spellcheck class adds all dictionary file words into the Trie in order to cross reference the word list against
+    the input file Trie. The __init__ adds the dictionary file's words into its own Trie then checks if the input
+    file's words are in the dictionary Trie. If the input file's words can't be found, they're printed out as
+    incorrect words.
     """
 
-    def __init__(self, processed_input, processed_dictionary):
-        self.processed_input = processed_input
+    def __init__(self, processed_dictionary):
         self.processed_dictionary = processed_dictionary
+        self.words = Trie()
+        for word in self.processed_dictionary:
+            self.words.add(word)
 
-    def read_dictionary(self):
+    def spellcheck(self, word):
         """
-        The read_dictionary() function takes in the processed_input and processed_dictionary variables to compare
-        their corresponding keys (i.e. all input words starting with A will be compared against the dictionary
-        items under key A).
-
-        First, matching and mismatched keys are determined. By doing so, read_dictionary() can then determine
-        which items within the processed_input dict variable can be found within the items in the processed_dictionary
-        dict variable. The mismatched keys covers any keys in processed_input that can't be found in processed_dictionary.
-
-        Additionally, numeric entries are corrected for within the processed_input dict, as they're outside the scope
-        of the expected data of the dictionary input.
-
-        :param input_set: word set of all words in input file
-        :return: all incorrect words, delimited by new lines
+        The spellcheck function determines whether the words in the input Trie are in the dictionary Trie. If the
+        input words aren't found in the dictionary, the words are appended into the incorrect_words list, printed,
+        and then returned as a list.
+        :param word:
+        :return: incorrect_words list
         """
-
-        """
-        1. Iterate through D-L Distance
-            1a. for loop on dictionary
-            1b. for loop on input file
-        2. Append to overall list
-        3. If any values in dictionary = 0, drop that entry
-        4. Return remaining results  
-        """
-
-        """
-        organize all words in dictionary and input file into an alphabetically ordered dictionary
-        i.e. all words arranged into key:value of matching first character letter
-        call D-L distance according to these pairs
-        figure out a way to run the calls against dictionary terms which match first character
-        """
-
-        shared_keys = sorted(set(self.processed_input.keys()).intersection(self.processed_dictionary.keys()))
-        missing_keys = sorted(set(self.processed_input.keys()) - set(self.processed_dictionary.keys()))
-        alpha_missing_keys = [key for key in missing_keys if not(key.isdigit())]
 
         incorrect_words = []
 
-        for keys in shared_keys:
-            for words in self.processed_input[keys]:
-                if words not in self.processed_dictionary[keys]:
-                    incorrect_words.append(words)
-                    print(words)
+        if word not in self.words:
+            incorrect_words.append(word)
+            print(word)
 
-        for key in alpha_missing_keys:
-            for words in self.processed_input[key]:
-                incorrect_words.append(words)
-                print(words)
-
-        return sorted(incorrect_words)
+        return incorrect_words
 
 
 def main():
     """
+    ""
     The main function directs the sequence of operations in this script.
 
     Firstly, the input file and dictionary file are accepted into the ProcessFiles class to be processed,
     then the outputs are sent over to the SpellCheck class.
 
-    The SpellCheck class then calls the read_dictionary function which compares the words in the
+    The SpellCheck class then calls the spellcheck() function which compares the words in the
     input file against the words in the dictionary file to determine misspellings.
 
     :return: all input file words not found in the dictionary file
@@ -205,49 +224,38 @@ def main():
         start_file_check = time.time()
         print('Checking file format correctness!')
 
-        if input_processing.check_file_format() != 1 and dictionary_processing.check_file_format() == 1:
+        if dictionary_processing.check_file_format() == 1:
             end_file_check = time.time()
             print('Function check_file_format() took: ' + str(end_file_check - start_file_check) + ' seconds\n')
             print('Checking input words against dictionary!\n')
+            trie = Trie()
+
             processed_input = input_processing.process_input()
+            processed_input = [word for word in processed_input if not (word.isdigit())]
             processed_dictionary = dictionary_processing.process_input()
 
-            check_spelling = SpellCheck(processed_input, processed_dictionary)
+            for word in processed_input:
+                trie.add(word)
+                try:
+                    assert(word in trie)
+                except AssertionError:
+                    print(word)
+                    sys.exit()
 
-            start_time = time.time()
-            check_spelling.read_dictionary()
-            end_time = time.time()
-            print("read_dictionary() took: " + str(end_time - start_time) + ' seconds')
+            spell_check_start_time = time.time()
+            check_spelling = SpellCheck(processed_dictionary)
+            for word in processed_input:
+                check_spelling.spellcheck(word)
+            spell_check_end_time = time.time()
+            print('Function spellcheck() took: ' + str(spell_check_end_time - spell_check_start_time) + ' seconds')
+
+            sys.exit()
+
         else:
             end_file_check = time.time()
             print('File format checking took: ' + str(end_file_check - start_file_check) + ' seconds')
-            print('The input and dictionary files haven\'t been formatted properly, please format your files correctly!')
+            print('The dictionary file hasn\'t been formatted properly, please format your file correctly!')
             sys.exit()
-
-    class SpellCheckTesting(unittest.TestCase):
-        """
-        The SpellCheckTesting class is a quick unit test to sanity check my development with the spell checker.
-        By knowing the expected output, I can test the results during development and be certain that I'm developing
-        towards the correct direction.
-        """
-
-        """def test_spell_checking(self):
-            self.assertEqual(calculate_damerau_levenshtein_distance('a', 'a'),
-                             0)
-            self.assertEqual(calculate_damerau_levenshtein_distance('ab', 'ba'),
-                             1)
-            self.assertEqual(calculate_damerau_levenshtein_distance('abcd', 'bac'),
-                             2)
-            self.assertEqual(calculate_damerau_levenshtein_distance('abcde', 'bac'),
-                             3)
-            self.assertEqual(calculate_damerau_levenshtein_distance('abcde', 'ba'),
-                             4)
-            self.assertEqual(SpellCheck(ProcessFiles('Inputfile').process_input(),
-                                        ProcessFiles("Dictionaryfile").process_input()).read_dictionary(),
-                             dict.fromkeys(['difficlt', 'documnt', 'words']).keys())"""
-
-    #unit_testing = SpellCheckTesting()
-    #unit_testing.test_spell_checking()
 
 
 if __name__ == "__main__":
