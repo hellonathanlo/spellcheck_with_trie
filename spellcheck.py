@@ -25,7 +25,6 @@ Considerations:
 
 import sys
 import re
-import unittest
 import argparse
 import time
 
@@ -244,8 +243,10 @@ def main():
 
             spell_check_start_time = time.time()
             check_spelling = SpellCheck(processed_dictionary)
+
             for word in processed_input:
                 check_spelling.spellcheck(word)
+
             spell_check_end_time = time.time()
             print('Function spellcheck() took: ' + str(spell_check_end_time - spell_check_start_time) + ' seconds')
 
