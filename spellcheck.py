@@ -199,7 +199,6 @@ class SpellCheck(object):
 
 def main():
     """
-    ""
     The main function directs the sequence of operations in this script.
 
     Firstly, the input file and dictionary file are accepted into the ProcessFiles class to be processed,
