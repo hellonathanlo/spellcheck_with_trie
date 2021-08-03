@@ -16,7 +16,7 @@ Considerations:
         - Entries with 0 distance are same as those in the dictionary
 - Re: Trie
     - Follow implementations of Trie
-        - Entries which can't be found in dictionary Trie spit out as incorrect numbers
+        - Entries which can't be found in dictionary Trie spit out as "incorrect" words
 - inputFile
     - lowercase() and remove punctuation for comparison
 - dictionaryFile
@@ -105,8 +105,8 @@ class ProcessFiles(object):
 
 class Node:
     """
-    The Node class initializes each node of the Trie. By accepting a value, the node is initialized and
-    returns the value of the specified node when the Trie is traversed.
+    The Node class initializes each node of the Trie. These nodes are the base unit which accept
+    each character of the string and act as the base unit of the Trie data structure.
     """
 
     def __init__(self, value):
@@ -132,8 +132,10 @@ class Node:
 
 class Trie:
     """
-    The Trie class accepts each word of the processed files as an end node. By building each branch of the Trie
-    with partial completions of the word, the end node represents each word of the file.
+    The Trie class initializes an empty Node class to then populate with the letters which make up the strings of
+    each word (i.e. end node). The Trie structure is produced by adding a letter to each subsequent node to "build"
+    strings until no more letters can be provided. By building this structure, words can be effectively sought for
+    within a tree data structure.
     """
 
     def __init__(self):
