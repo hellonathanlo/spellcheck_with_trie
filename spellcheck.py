@@ -223,7 +223,7 @@ def main():
 
     command_line_help()
 
-    if len(sys.argv) <= 1:
+    if len(sys.argv) <= 2:
         print('Please input the input files and dictionary files!')
         sys.exit()
     elif len(sys.argv) > 3:
