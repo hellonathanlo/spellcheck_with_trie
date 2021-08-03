@@ -97,6 +97,7 @@ class ProcessFiles(object):
         word_list = re.findall(r'\w+', file_content)
 
         word_list = [word.lower() for word in word_list]
+        word_list = [word.strip() for word in word_list]
 
         word_set = set(word_list)
 
@@ -132,17 +133,21 @@ class Node:
 
 class Trie:
     """
-    The Trie class initializes an empty Node class to then populate with the letters which make up the strings of
-    each word (i.e. end node). The Trie structure is produced by adding a letter to each subsequent node to "build"
-    strings until no more letters can be provided. By building this structure, words can be effectively sought for
-    within a tree data structure.
+    The Trie class initializes an empty Node class as the Trie root. The Trie is then populated with the letters which
+    make up the substrings of the string until finalizing at the complete string (i.e. spelling is complete).
+    By building this structure, words can be effectively searched within a tree data structure.
     """
 
     def __init__(self):
         self.root = Node('')
 
     def add(self, word):
-        word = word.strip()
+        """
+        The add function takes the empty Node as the root of the Trie then adds letters from the word parameter until
+        there are no more letters in the word.
+        :param word: A word from the dictionary file
+        """
+
         node = self.root
         for letter in word:
             next_letter = node[letter]
@@ -154,6 +159,12 @@ class Trie:
         node.end = True
 
     def __contains__(self, word):
+        """
+        The __contains__ function provides the search functionality of the Trie class by searching through the letters
+        which compose the string.
+        :param word: the target word being searched for within the Trie structure
+        :return: True or Flase depending on whether or not the word can be found.
+        """
         node = self.root
         for letter in word:
             if letter not in node:
@@ -229,7 +240,6 @@ def main():
             end_file_check = time.time()
             print('Function check_file_format() took: ' + str(end_file_check - start_file_check) + ' seconds\n')
             print('Checking input words against dictionary!\n')
-            trie = Trie()
 
             processed_input = input_processing.process_input()
 
@@ -237,14 +247,6 @@ def main():
             processed_input = [word for word in processed_input if not re.match(r'\d+', word)]
 
             processed_dictionary = dictionary_processing.process_input()
-
-            for word in processed_input:
-                trie.add(word)
-                try:
-                    assert (word in trie)
-                except AssertionError:
-                    print(word)
-                    sys.exit()
 
             spell_check_start_time = time.time()
             check_spelling = SpellCheck(processed_dictionary)
