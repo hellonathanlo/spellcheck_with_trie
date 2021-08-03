@@ -90,12 +90,11 @@ class ProcessFiles(object):
         comparing words from the input file and the dictionary file.
         :return: word_list, a set of words from the inputted file, set to lower case for comparison
         """
-        regex = r'\w+'
 
         with open(self.input_file) as file:
             file_content = file.read()
 
-        word_list = re.findall(regex, file_content)
+        word_list = re.findall(r'\w+', file_content)
 
         word_list = [word.lower() for word in word_list]
 
@@ -109,6 +108,7 @@ class Node:
     The Node class initializes each node of the Trie. By accepting a value, the node is initialized and
     returns the value of the specified node when the Trie is traversed.
     """
+
     def __init__(self, value):
         self.value = value
         self.children = dict()
@@ -135,6 +135,7 @@ class Trie:
     The Trie class accepts each word of the processed files as an end node. By building each branch of the Trie
     with partial completions of the word, the end node represents each word of the file.
     """
+
     def __init__(self):
         self.root = Node('')
 
@@ -230,13 +231,16 @@ def main():
             trie = Trie()
 
             processed_input = input_processing.process_input()
-            processed_input = [word for word in processed_input if not (word.isdigit())]
+
+            # Correcting for all digits and ordinal numbers in the input text
+            processed_input = [word for word in processed_input if not re.match(r'\d+', word)]
+
             processed_dictionary = dictionary_processing.process_input()
 
             for word in processed_input:
                 trie.add(word)
                 try:
-                    assert(word in trie)
+                    assert (word in trie)
                 except AssertionError:
                     print(word)
                     sys.exit()
