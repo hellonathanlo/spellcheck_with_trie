@@ -1,4 +1,4 @@
-# OICR_interview_takehome
+# Spell Check Using a Trie
 
 ## Overview
 
